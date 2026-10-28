@@ -1,12 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
-import {
-  CloudConnectionError,
-  createAdminDataServiceAsync,
-  type AdminDataService,
-} from "@almosafar/shared";
-import { firebaseEnv } from "../lib/firebase-env";
+import { LocalAdminDataService, type AdminDataService } from "@almosafar/shared";
 
 const AdminDataContext = createContext<{
   admin: AdminDataService | null;
@@ -18,50 +13,23 @@ const AdminDataContext = createContext<{
 } | null>(null);
 
 export function AdminDataProvider({ children }: { children: React.ReactNode }) {
-  const [admin, setAdmin] = useState<AdminDataService | null>(null);
+  const admin = useMemo(() => new LocalAdminDataService(), []);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [forceLocal, setForceLocal] = useState(false);
-  const [tick, setTick] = useState(0);
 
   useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    setError(null);
-    createAdminDataServiceAsync(firebaseEnv, { forceLocal })
-      .then((svc) => {
-        if (!cancelled) setAdmin(svc);
-      })
-      .catch((e) => {
-        if (!cancelled) {
-          setAdmin(null);
-          setError(
-            e instanceof CloudConnectionError
-              ? e.message
-              : e instanceof Error
-                ? e.message
-                : "Init failed"
-          );
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [forceLocal, tick]);
+    setLoading(false);
+  }, []);
 
   const value = useMemo(
     () => ({
       admin,
-      error,
+      error: null,
       loading,
-      forceLocal,
-      setForceLocal,
-      retry: () => setTick((x) => x + 1),
+      forceLocal: true,
+      setForceLocal: () => {},
+      retry: () => {},
     }),
-    [admin, error, loading, forceLocal]
+    [admin, loading]
   );
 
   return <AdminDataContext.Provider value={value}>{children}</AdminDataContext.Provider>;

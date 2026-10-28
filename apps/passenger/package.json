@@ -2,46 +2,35 @@
   "name": "@almosafar/passenger",
   "version": "0.1.0",
   "private": true,
-  "installConfig": {
-    "hoistingLimits": "workspaces"
-  },
-  "main": "expo/AppEntry.js",
-  "expo": {
-    "install": {
-      "exclude": ["typescript"]
-    }
-  },
   "scripts": {
-    "start": "expo start --dev-client",
-    "android": "expo start --android --dev-client",
-    "ios": "expo start --ios --dev-client",
-    "typecheck": "tsc --noEmit"
+    "dev": "node --max-old-space-size=4096 ../../node_modules/next/dist/bin/next dev --port 3001",
+    "build": "next build",
+    "start": "next start --port 3001",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint"
   },
   "dependencies": {
+    "@almosafar/demo-core": "*",
+    "@almosafar/maps": "*",
     "@almosafar/shared": "*",
-    "@react-native-async-storage/async-storage": "2.2.0",
-    "@react-navigation/bottom-tabs": "^6.6.1",
-    "@react-navigation/native": "^6.1.18",
-    "@react-navigation/stack": "^6.4.1",
-    "@reduxjs/toolkit": "^2.5.1",
-    "expo": "~58.0.19",
-    "expo-constants": "~58.0.13",
-    "expo-dev-client": "~58.0.15",
-    "expo-splash-screen": "~58.0.11",
-    "expo-status-bar": "~58.0.4",
+    "@almosafar/ui": "*",
+    "leaflet": "^1.9.4",
+    "lucide-react": "^0.511.0",
+    "next": "15.5.28",
     "react": "19.3.0",
-    "react-native": "0.88.0",
-    "react-native-gesture-handler": "~3.3.0",
-    "react-native-google-places-autocomplete": "^2.5.7",
-    "react-native-maps": "1.29.11",
-    "react-native-safe-area-context": "~5.10.1",
-    "react-native-screens": "~4.30.0",
-    "react-redux": "^9.2.0",
-    "tailwind-react-native-classnames": "^1.5.1"
+    "react-dom": "19.3.0",
+    "react-leaflet": "^5.0.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.26.0",
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4",
+    "@types/leaflet": "^1.9.16",
+    "@types/node": "^20",
     "@types/react": "~19.3.0",
+    "@types/react-dom": "~19.3.0",
+    "eslint": "^9",
+    "eslint-config-next": "15.5.28",
+    "tailwindcss": "^4",
     "typescript": "^5.7.3"
   }
 }

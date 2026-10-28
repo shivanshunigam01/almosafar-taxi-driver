@@ -7,9 +7,9 @@ import { ToastProvider } from "../ui/Toast";
 export function ClientProviders({ children }: { children: React.ReactNode }) {
   return (
     <AdminLocaleProvider>
-      <ToastProvider>
-        <AdminDataProvider>{children}</AdminDataProvider>
-      </ToastProvider>
+      <AdminDataProvider>
+        <ToastProvider>{children}</ToastProvider>
+      </AdminDataProvider>
     </AdminLocaleProvider>
   );
 }

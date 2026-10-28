@@ -115,7 +115,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         <aside className={`sidebar ${navOpen ? "open" : ""}`}>
           <div className="brand">{t("appName")}</div>
           <p className="sync-label">
-            {admin.mode === "firestore" ? t("syncCloud") : t("syncLocal")}
+            {t("syncLocal")}
           </p>
           <nav>
             {NAV.map((item) => (

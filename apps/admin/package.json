@@ -6,14 +6,16 @@
     "hoistingLimits": "workspaces"
   },
   "scripts": {
-    "dev": "next dev --port 3000",
+    "dev": "node --max-old-space-size=4096 ../../node_modules/next/dist/bin/next dev --port 3000",
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@almosafar/demo-core": "*",
     "@almosafar/shared": "*",
     "@almosafar/ui": "*",
+    "@almosafar/maps": "*",
     "next": "^15.1.6",
     "react": "19.3.0",
     "react-dom": "19.3.0"

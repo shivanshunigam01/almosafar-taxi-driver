@@ -70,7 +70,14 @@ export default function LoginPage() {
               <div className="card" style={{ marginBottom: 16, padding: 14, background: "#fef2f2" }}>
                 <p className="error-text" style={{ margin: "0 0 10px" }}>{error}</p>
                 <div className="toolbar" style={{ margin: 0 }}>
-                  <button type="button" className="btn secondary" onClick={retry}>
+                  <button
+                    type="button"
+                    className="btn secondary"
+                    onClick={() => {
+                      retry();
+                      toast({ variant: "info", title: "Local demo", description: "Admin uses in-memory demo data." });
+                    }}
+                  >
                     Retry
                   </button>
                   <button
@@ -93,7 +100,7 @@ export default function LoginPage() {
             {!error || forceLocal ? (
               <form onSubmit={onSubmit}>
                 <p className="muted" style={{ marginBottom: 16 }}>
-                  {admin?.mode === "firestore" ? t("firebaseHint") : t("localDemoHint")}
+                  {t("localDemoHint")}
                 </p>
                 <div className="form-row">
                   <label htmlFor="admin-email">{t("email")}</label>

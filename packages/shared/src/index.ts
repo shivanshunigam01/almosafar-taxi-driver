@@ -1,5 +1,11 @@
 export * from "./constants/currency";
 export * from "./constants/demo";
+export {
+  DEMO_LOCATIONS,
+  DEMO_LOCATIONS_AR,
+  getDemoSeedBundle,
+  type DemoSeedBundle,
+} from "./demo/index";
 export * from "./constants/ids";
 export * from "./constants/vehicle-categories";
 export * from "./rides/cancellation-reasons";
@@ -26,6 +32,7 @@ export * from "./schemas/admin-ops";
 export {
   createAdminDataServiceAsync,
   resetAdminDataServiceForTests,
+  LocalAdminDataService,
   type AdminDataService,
   type AdminFarePatch,
 } from "./admin";

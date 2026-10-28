@@ -1,33 +1,36 @@
-# Almosafar Taxi — Driver (Expo)
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-Independent Expo dev-client app with Android package **`com.almosafar.taxi.driver`**. Uses `@almosafar/shared` for rides, fares, driver APIs, and Firestore/local demo backends.
+## Getting Started
 
-## Run
-
-From repository root after `npm install` and `npm run build:shared`:
+First, run the development server:
 
 ```bash
-npm run driver
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
 ```
 
-Demo login: `demo.driver.khalid@example.com` (any password).
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-## Flows
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-- Demo login and profile (vehicle, settings, notifications)
-- Home dashboard with **online/offline** toggle
-- Incoming requests with **30s countdown**, accept/reject
-- Trip: navigate to pickup → arrived → **demo PIN** → start trip → **simulated** map tracking → complete
-- Receipt with **15% demo commission** and net earnings
-- Ride history, daily/monthly earnings (IQD formatting, AR/EN + RTL)
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-**Local demo:** going online injects a deterministic Baghdad dispatch ride if none are open. **Firestore:** open `requested` rides via subscription; accept uses a **transaction** claim when configured.
+## Learn More
 
-## EAS APK
+To learn more about Next.js, take a look at the following resources:
 
-Configure `extra.eas.projectId` in `app.config.ts`, then:
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-```bash
-cd apps/driver
-eas build -p android --profile driver-apk
-```
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+
+## Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.

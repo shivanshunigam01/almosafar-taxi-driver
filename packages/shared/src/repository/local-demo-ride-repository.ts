@@ -44,6 +44,31 @@ export class LocalDemoRideRepository implements RideRepository {
     this.drivers.forEach((d) => this.driverOnline.set(d.id, d.isOnline));
   }
 
+  /** Serializable state for browser localStorage (demo-core). */
+  exportSnapshot(): {
+    rides: Ride[];
+    driverOnline: Record<string, boolean>;
+  } {
+    return {
+      rides: [...this.rides.values()],
+      driverOnline: Object.fromEntries(this.driverOnline.entries()),
+    };
+  }
+
+  restoreSnapshot(snapshot: {
+    rides: Ride[];
+    driverOnline: Record<string, boolean>;
+  }): void {
+    this.rides.clear();
+    snapshot.rides.forEach((r) => this.rides.set(r.id, parseRide(r)));
+    this.driverOnline.clear();
+    Object.entries(snapshot.driverOnline).forEach(([id, online]) =>
+      this.driverOnline.set(id, online)
+    );
+    this.emitOpenRequests();
+    [...this.rides.keys()].forEach((id) => this.emit(id));
+  }
+
   private getOpenRides(): Ride[] {
     return [...this.rides.values()].filter(
       (r) => r.status === "requested" && !r.driverId
@@ -185,7 +210,7 @@ export class LocalDemoRideRepository implements RideRepository {
     const ride = this.rides.get(rideId);
     if (!ride || ride.status === "cancelled" || ride.status === "completed") return;
     try {
-      const next = transitionRide({
+      let next = transitionRide({
         ride,
         toStatus: status,
         actorId: driverId,
@@ -193,6 +218,9 @@ export class LocalDemoRideRepository implements RideRepository {
         driverId,
         vehicleId,
       });
+      if (status === "accepted") {
+        next = { ...next, demoPassengerPin: generateDemoPassengerPin() };
+      }
       this.rides.set(rideId, next);
       this.emit(rideId);
     } catch {
@@ -249,7 +277,11 @@ export class LocalDemoRideRepository implements RideRepository {
   async ensureLocalDemoDispatchScenario(driverId: string): Promise<void> {
     if (this.getOpenRides().length > 0) return;
     const scenarioId = localScenarioRideIdForDriver(driverId);
-    if (this.rides.has(scenarioId)) return;
+    const existing = this.rides.get(scenarioId);
+    if (existing) {
+      if (existing.status === "requested" && !existing.driverId) return;
+      this.rides.delete(scenarioId);
+    }
     const ride = buildLocalDemoDispatchRide(driverId);
     const withId = { ...ride, id: scenarioId };
     this.rides.set(withId.id, withId);

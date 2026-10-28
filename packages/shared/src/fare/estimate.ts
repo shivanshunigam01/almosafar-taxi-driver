@@ -22,12 +22,15 @@ export function estimateTripFare(params: {
   dropoff: Address;
   fareConfig: FareConfiguration;
   avgSpeedKmh?: number;
+  /** Route geometry metrics when available (OSRM or demo route). */
+  distanceKm?: number;
+  durationMinutes?: number;
 }): RideFareBreakdown {
-  const distanceKm = distanceKmBetween(params.pickup.geo, params.dropoff.geo);
-  const durationMinutes = estimateDurationMinutes(
-    distanceKm,
-    params.avgSpeedKmh
-  );
+  const distanceKm =
+    params.distanceKm ?? distanceKmBetween(params.pickup.geo, params.dropoff.geo);
+  const durationMinutes =
+    params.durationMinutes ??
+    estimateDurationMinutes(distanceKm, params.avgSpeedKmh);
   return calculateFare({
     fareConfig: params.fareConfig,
     distanceKm,

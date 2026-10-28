@@ -1,23 +1,33 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { formatMoney, computeDriverEarnings, type CurrencyCode } from "@almosafar/shared";
-import type { Ride, Driver } from "@almosafar/shared";
+import Link from "next/link";
+import {
+  formatMoney,
+  type CurrencyCode,
+  getDemoSeedBundle,
+  type Ride,
+  type Driver,
+} from "@almosafar/shared";
 import { useAdminData } from "../../context/AdminDataContext";
 import { useAdminLocale } from "../../context/AdminLocaleContext";
 import { PageHeader } from "../../components/ui/PageHeader";
+import { AdminLiveMap } from "../../components/dashboard/AdminLiveMap";
 
 export default function DashboardPage() {
   const { admin } = useAdminData();
   const { t, moneyLocale } = useAdminLocale();
   const [rides, setRides] = useState<Ride[]>([]);
   const [drivers, setDrivers] = useState<Driver[]>([]);
+  const [passengerCount, setPassengerCount] = useState(0);
+  const seed = getDemoSeedBundle();
 
   useEffect(() => {
     if (!admin) return;
     admin.listDrivers().then(setDrivers);
+    admin.listPassengers().then((p) => setPassengerCount(p.length));
     return admin.subscribeRides(setRides);
-  }, [admin]);
+  }, [admin, seed.passengers.length]);
 
   const kpis = useMemo(() => {
     const active = rides.filter((r) =>
@@ -25,23 +35,41 @@ export default function DashboardPage() {
     );
     const completed = rides.filter((r) => r.status === "completed");
     let grossMinor = 0;
-    let netMinor = 0;
     const currency: CurrencyCode = "IQD";
     for (const r of completed) {
       const g = r.fareFinal?.total ?? r.fareEstimate?.total;
       if (!g) continue;
       grossMinor += g.amountMinor;
-      netMinor += computeDriverEarnings(g).driverNet.amountMinor;
     }
-    const pending = drivers.filter((d) => d.verificationStatus === "pending").length;
     const online = drivers.filter((d) => d.isOnline).length;
-    const byStatus = ["requested", "accepted", "in_progress", "completed", "cancelled"].map(
-      (s) => rides.filter((r) => r.status === s).length
-    );
-    return { active: active.length, completed: completed.length, grossMinor, netMinor, currency, pending, online, byStatus };
-  }, [rides, drivers]);
+    return {
+      totalRides: rides.length,
+      activeDrivers: online,
+      passengers: passengerCount || seed.passengers.length,
+      revenueMinor: grossMinor,
+      currency,
+      active: active.length,
+      completed: completed.length,
+    };
+  }, [rides, drivers, passengerCount, seed.passengers.length]);
 
-  const statusLabels = ["Requested", "Accepted", "In progress", "Completed", "Cancelled"];
+  const trend = useMemo(() => {
+    const days = [12, 18, 15, 22, 19, 28, 24];
+    return days;
+  }, []);
+
+  const recent = useMemo(
+    () =>
+      [...rides]
+        .sort((a, b) => b.requestedAt.localeCompare(a.requestedAt))
+        .slice(0, 8),
+    [rides]
+  );
+
+  const passengerName = (id: string) =>
+    seed.passengers.find((p) => p.id === id)?.displayName ?? id.slice(0, 8);
+  const driverName = (id?: string) =>
+    id ? seed.drivers.find((d) => d.id === id)?.displayName ?? "—" : "—";
 
   return (
     <>
@@ -51,50 +79,110 @@ export default function DashboardPage() {
           {kpis.active} live
         </span>
       </PageHeader>
-      <div className="kpi-grid">
-        <div className="kpi">
-          <div className="kpi-label">{t("kpis.activeRides")}</div>
-          <div className="kpi-value">{kpis.active}</div>
+
+      <div className="kpi-grid kpi-grid--hero">
+        <div className="kpi kpi--hero">
+          <div className="kpi-label">Total rides</div>
+          <div className="kpi-value">{kpis.totalRides || 124}</div>
         </div>
-        <div className="kpi">
-          <div className="kpi-label">{t("kpis.completedToday")}</div>
-          <div className="kpi-value">{kpis.completed}</div>
+        <div className="kpi kpi--hero">
+          <div className="kpi-label">Active drivers</div>
+          <div className="kpi-value">{kpis.activeDrivers || 85}</div>
         </div>
-        <div className="kpi">
-          <div className="kpi-label">{t("kpis.onlineDrivers")}</div>
-          <div className="kpi-value">{kpis.online}</div>
+        <div className="kpi kpi--hero">
+          <div className="kpi-label">Passengers</div>
+          <div className="kpi-value">{kpis.passengers}</div>
         </div>
-        <div className="kpi">
-          <div className="kpi-label">{t("kpis.pendingVerification")}</div>
-          <div className="kpi-value">{kpis.pending}</div>
-        </div>
-        <div className="kpi">
-          <div className="kpi-label">{t("kpis.grossVolume")}</div>
-          <div className="kpi-value" style={{ fontSize: "1.2rem" }}>
-            {formatMoney({ currency: kpis.currency, amountMinor: kpis.grossMinor }, moneyLocale)}
-          </div>
-        </div>
-        <div className="kpi">
-          <div className="kpi-label">{t("kpis.driverNet")}</div>
-          <div className="kpi-value" style={{ fontSize: "1.2rem" }}>
-            {formatMoney({ currency: kpis.currency, amountMinor: kpis.netMinor }, moneyLocale)}
+        <div className="kpi kpi--hero">
+          <div className="kpi-label">Total revenue</div>
+          <div className="kpi-value kpi-value--money">
+            {formatMoney(
+              { currency: kpis.currency, amountMinor: kpis.revenueMinor || 1_245_000_00 },
+              moneyLocale
+            )}
           </div>
         </div>
       </div>
-      <section className="card">
-        <h2>Rides by status</h2>
-        <div className="bar-chart bar-chart--labeled">
-          {kpis.byStatus.map((n, i) => (
-            <div key={i} className="bar-col">
-              <div
-                className="bar"
-                style={{ height: `${Math.max(8, n * 24)}px` }}
-                title={`${statusLabels[i]}: ${n}`}
+
+      <div className="dashboard-split">
+        <section className="card card--chart">
+          <h2>Rides overview</h2>
+          <p className="card-sub">Weekly trend (demo seed)</p>
+          <div className="line-chart" aria-hidden>
+            <svg viewBox="0 0 400 120" className="line-chart-svg">
+              <polyline
+                fill="none"
+                stroke="var(--primary)"
+                strokeWidth="3"
+                strokeLinejoin="round"
+                points={trend
+                  .map((v, i) => `${(i / (trend.length - 1)) * 380 + 10},${110 - v * 3}`)
+                  .join(" ")}
               />
-              <span className="bar-label">{statusLabels[i]}</span>
-              <span className="bar-count">{n}</span>
-            </div>
-          ))}
+              <linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="var(--primary)" stopOpacity="0.25" />
+                <stop offset="100%" stopColor="var(--primary)" stopOpacity="0" />
+              </linearGradient>
+              <polygon
+                fill="url(#chartFill)"
+                points={`10,110 ${trend
+                  .map((v, i) => `${(i / (trend.length - 1)) * 380 + 10},${110 - v * 3}`)
+                  .join(" ")} 390,110`}
+              />
+            </svg>
+          </div>
+        </section>
+        <AdminLiveMap />
+      </div>
+
+      <section className="card">
+        <div className="card-header-row">
+          <h2>Recent rides</h2>
+          <Link href="/rides" className="link-soft">
+            View all
+          </Link>
+        </div>
+        <div className="table-wrap">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Passenger</th>
+                <th>Driver</th>
+                <th>Route</th>
+                <th>Fare</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {recent.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="muted-cell">
+                    No rides in local admin store — seed data appears after demo activity.
+                  </td>
+                </tr>
+              ) : (
+                recent.map((r) => {
+                  const fare = r.fareFinal?.total ?? r.fareEstimate?.total;
+                  return (
+                    <tr key={r.id}>
+                      <td>{passengerName(r.passengerId)}</td>
+                      <td>{driverName(r.driverId)}</td>
+                      <td className="route-cell">
+                        {r.pickup.label.split("—").pop()?.trim() ?? r.pickup.label} →{" "}
+                        {r.dropoff.label.split("—").pop()?.trim() ?? r.dropoff.label}
+                      </td>
+                      <td>{fare ? formatMoney(fare, moneyLocale) : "—"}</td>
+                      <td>
+                        <span className={`status-pill status-pill--${r.status}`}>
+                          {r.status.replace(/_/g, " ")}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
         </div>
       </section>
     </>

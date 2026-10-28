@@ -1,126 +1,65 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import React, {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
-import type { Driver } from "@almosafar/shared";
-import { useDataService } from "./DataServiceContext";
+"use client";
 
-const SESSION_KEY = "@almosafar/driver_session";
+import React, { createContext, useContext, useEffect, useState } from "react";
+import { getDemoSeedBundle } from "@almosafar/shared";
 
-interface AuthContextValue {
-  driver: Driver | null;
-  loading: boolean;
-  isOnline: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
-  refreshSession: () => Promise<void>;
-  setOnline: (online: boolean) => Promise<void>;
-  refreshOnline: () => Promise<void>;
-}
+const KEY = "almosafar.driver.session";
 
-const AuthContext = createContext<AuthContextValue | null>(null);
+type Session = { driverId: string; name: string; email: string; vehicleId: string };
+
+const AuthContext = createContext<{
+  session: Session | null;
+  hydrated: boolean;
+  login: (email: string) => Promise<void>;
+  logout: () => void;
+} | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const { service } = useDataService();
-  const [driver, setDriver] = useState<Driver | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [isOnline, setIsOnline] = useState(false);
-
-  const refreshOnline = useCallback(async () => {
-    if (!driver) {
-      setIsOnline(false);
-      return;
-    }
-    const online = await service.isDriverOnline(driver.id);
-    setIsOnline(online);
-  }, [driver, service]);
-
-  const refreshSession = useCallback(async () => {
-    const raw = await AsyncStorage.getItem(SESSION_KEY);
-    if (!raw) {
-      setDriver(null);
-      setIsOnline(false);
-      return;
-    }
-    const { driverId } = JSON.parse(raw) as { driverId: string };
-    const d = await service.getDriver(driverId);
-    setDriver(d);
-    if (d) {
-      const online = await service.isDriverOnline(d.id);
-      setIsOnline(online);
-    }
-  }, [service]);
+  const [session, setSession] = useState<Session | null>(null);
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    (async () => {
-      await refreshSession();
-      setLoading(false);
-    })();
-  }, [refreshSession]);
+    const raw = localStorage.getItem(KEY);
+    if (raw) setSession(JSON.parse(raw));
+    setHydrated(true);
+  }, []);
 
-  const persistSession = async (d: Driver) => {
-    await AsyncStorage.setItem(SESSION_KEY, JSON.stringify({ driverId: d.id }));
-    setDriver(d);
-    const online = await service.isDriverOnline(d.id);
-    setIsOnline(online);
+  const login = async (email: string) => {
+    const seed = getDemoSeedBundle();
+    const d =
+      seed.drivers.find(
+        (x) => (x.email ?? "").toLowerCase() === email.trim().toLowerCase()
+      ) ?? seed.drivers[0]!;
+    const vehicle = seed.vehicles.find((v) => v.driverId === d.id) ?? seed.vehicles[0]!;
+    const s = {
+      driverId: d.id,
+      name: d.displayName,
+      email: d.email ?? email.trim(),
+      vehicleId: vehicle.id,
+    };
+    setSession(s);
+    localStorage.setItem(KEY, JSON.stringify(s));
   };
 
-  const login = async (email: string, password: string) => {
-    if (!email.trim()) throw new Error("Enter a demo driver email.");
-    if (service.cloudAuth) {
-      const session = await service.cloudAuth.signIn(email, password);
-      const d = await service.getDriver(session.entityId);
-      if (!d) throw new Error("Driver profile not found in Firestore. Run Firebase seed.");
-      await persistSession(d);
-      return;
-    }
-    const d = await service.loginDemoDriver(email.trim());
-    if (!d) throw new Error("Demo driver not found.");
-    await persistSession(d);
-  };
-
-  const logout = async () => {
-    if (driver && isOnline) {
-      await service.setDriverOnline(driver.id, false);
-    }
-    if (service.cloudAuth) await service.cloudAuth.signOut();
-    await AsyncStorage.removeItem(SESSION_KEY);
-    setDriver(null);
-    setIsOnline(false);
-  };
-
-  const setOnline = async (online: boolean) => {
-    if (!driver) return;
-    await service.setDriverOnline(driver.id, online);
-    setIsOnline(online);
-    const refreshed = await service.getDriver(driver.id);
-    if (refreshed) setDriver(refreshed);
-  };
-
-  const value = useMemo(
-    () => ({
-      driver,
-      loading,
-      isOnline,
-      login,
-      logout,
-      refreshSession,
-      setOnline,
-      refreshOnline,
-    }),
-    [driver, loading, isOnline, refreshSession, refreshOnline]
+  return (
+    <AuthContext.Provider
+      value={{
+        session,
+        hydrated,
+        login,
+        logout: () => {
+          setSession(null);
+          localStorage.removeItem(KEY);
+        },
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
   );
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-export function useAuth(): AuthContextValue {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth requires AuthProvider");
-  return ctx;
+export function useAuth() {
+  const c = useContext(AuthContext);
+  if (!c) throw new Error("AuthProvider required");
+  return c;
 }

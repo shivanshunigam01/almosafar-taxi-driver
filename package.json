@@ -1,31 +1,39 @@
 {
   "name": "almosafar-taxi",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
-  "description": "Almosafar Taxi — passenger, driver, and admin demo monorepo",
+  "description": "Almosafar Taxi — Next.js passenger, driver, and admin demo monorepo",
   "workspaces": [
-    "apps/*",
+    "apps/admin",
+    "apps/passenger",
+    "apps/driver",
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run build -w @almosafar/shared && npm run build -w @almosafar/ui",
+    "build": "npm run build -w @almosafar/shared && npm run build -w @almosafar/ui && npm run build -w @almosafar/demo-core && npm run build -w @almosafar/maps",
     "build:shared": "npm run build -w @almosafar/shared",
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "test": "npm run test -w @almosafar/shared",
-    "test:shared": "npm run test -w @almosafar/shared",
-    "passenger": "npm run start -w @almosafar/passenger",
-    "driver": "npm run start -w @almosafar/driver",
-    "admin": "npm run dev -w @almosafar/admin",
-    "firebase:seed": "npm run build:shared && npm run build --prefix firebase/functions && npm run seed --prefix firebase/functions",
-    "firebase:deploy": "npm run build --prefix firebase/functions && cd firebase && firebase deploy --only firestore:rules,firestore:indexes,functions",
-    "postinstall": "npm run build:shared"
+    "test": "npm run test -w @almosafar/shared && npm run test -w @almosafar/demo-core && npm run test -w @almosafar/maps",
+    "dev:admin": "npm run dev -w @almosafar/admin",
+    "dev:passenger": "npm run dev -w @almosafar/passenger",
+    "dev:driver": "npm run dev -w @almosafar/driver",
+    "dev:all": "npm-run-all --parallel dev:admin dev:passenger dev:driver",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "build:admin": "npm run build -w @almosafar/admin",
+    "build:passenger": "npm run build -w @almosafar/passenger",
+    "build:driver": "npm run build -w @almosafar/driver",
+    "postinstall": "npm run build:shared && npm run build -w @almosafar/ui && npm run build -w @almosafar/demo-core && npm run build -w @almosafar/maps"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.52.0",
+    "npm-run-all": "^4.1.5"
   },
   "engines": {
     "node": ">=20"
   },
   "overrides": {
     "react": "19.3.0",
-    "react-dom": "19.3.0",
-    "react-native": "0.88.0"
+    "react-dom": "19.3.0"
   }
 }

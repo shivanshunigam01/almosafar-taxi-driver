@@ -1,0 +1,46 @@
+{
+  "name": "@almosafar/driver",
+  "version": "0.1.0",
+  "private": true,
+  "installConfig": {
+    "hoistingLimits": "workspaces"
+  },
+  "main": "expo/AppEntry.js",
+  "expo": {
+    "install": {
+      "exclude": ["typescript"]
+    }
+  },
+  "scripts": {
+    "start": "expo start --dev-client",
+    "android": "expo start --android --dev-client",
+    "ios": "expo start --ios --dev-client",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@almosafar/shared": "*",
+    "@react-native-async-storage/async-storage": "2.2.0",
+    "@react-navigation/bottom-tabs": "^6.6.1",
+    "@react-navigation/native": "^6.1.18",
+    "@react-navigation/stack": "^6.4.1",
+    "@reduxjs/toolkit": "^2.5.1",
+    "expo": "~58.0.19",
+    "expo-constants": "~58.0.13",
+    "expo-dev-client": "~58.0.15",
+    "expo-splash-screen": "~58.0.11",
+    "expo-status-bar": "~58.0.4",
+    "react": "19.3.0",
+    "react-native": "0.88.0",
+    "react-native-gesture-handler": "~3.3.0",
+    "react-native-maps": "1.29.11",
+    "react-native-safe-area-context": "~5.10.1",
+    "react-native-screens": "~4.30.0",
+    "react-redux": "^9.2.0",
+    "tailwind-react-native-classnames": "^1.5.1"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.26.0",
+    "@types/react": "~19.3.0",
+    "typescript": "^5.7.3"
+  }
+}

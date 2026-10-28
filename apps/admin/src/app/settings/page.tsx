@@ -2,11 +2,14 @@
 
 import { useEffect, useState } from "react";
 import type { AdminConfiguration } from "@almosafar/shared";
+import { LocalStorageConfigRepository } from "@almosafar/demo-core";
 import { useAdminData } from "../../context/AdminDataContext";
 import { useAdminLocale } from "../../context/AdminLocaleContext";
 
+const configRepo = new LocalStorageConfigRepository();
+
 export default function SettingsPage() {
-  const { admin, forceLocal, setForceLocal } = useAdminData();
+  const { admin } = useAdminData();
   const { t } = useAdminLocale();
   const [cfg, setCfg] = useState<AdminConfiguration | null>(null);
 
@@ -26,15 +29,52 @@ export default function SettingsPage() {
         </section>
       ) : null}
       <section className="card">
-        <h2>Connection</h2>
+        <h2>Local demo</h2>
         <p className="muted">{admin?.syncLabel}</p>
-        {admin?.mode === "firestore" ? (
-          <button type="button" className="btn secondary" onClick={() => setForceLocal(true)}>
-            Switch to local demo data
+        <p className="muted">
+          Export/import applies to this admin browser only. It does not update passenger or driver
+          sites on other ports or devices.
+        </p>
+        <div className="row" style={{ gap: "0.75rem", flexWrap: "wrap" }}>
+          <button
+            type="button"
+            className="btn secondary"
+            onClick={() => {
+              const json = configRepo.exportDemoJson();
+              void navigator.clipboard.writeText(json);
+              alert("Demo configuration JSON copied to clipboard.");
+            }}
+          >
+            Export demo config (JSON)
           </button>
-        ) : forceLocal ? (
-          <p className="muted">Using in-memory seeded demo (reload to retry Firebase).</p>
-        ) : null}
+          <label className="btn secondary" style={{ cursor: "pointer" }}>
+            Import demo config (JSON)
+            <input
+              type="file"
+              accept="application/json,.json"
+              hidden
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                try {
+                  const text = await file.text();
+                  configRepo.importDemoJson(text);
+                  alert("Imported into this browser’s admin storage envelope. Reload to refresh UI.");
+                } catch {
+                  alert("Invalid demo configuration JSON.");
+                }
+                e.target.value = "";
+              }}
+            />
+          </label>
+          <button
+            type="button"
+            className="btn primary"
+            onClick={() => window.location.reload()}
+          >
+            Reload page
+          </button>
+        </div>
       </section>
     </>
   );
