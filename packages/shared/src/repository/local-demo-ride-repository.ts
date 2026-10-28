@@ -257,7 +257,6 @@ export class LocalDemoRideRepository implements RideRepository {
     this.driverOnline.set(driverId, isOnline);
     const d = this.drivers.find((x) => x.id === driverId);
     if (d) d.isOnline = isOnline;
-    if (isOnline) await this.ensureLocalDemoDispatchScenario(driverId);
     this.emitOpenRequests();
   }
 
@@ -274,7 +273,10 @@ export class LocalDemoRideRepository implements RideRepository {
     return () => this.openListeners.delete(listener);
   }
 
-  async ensureLocalDemoDispatchScenario(driverId: string): Promise<void> {
+  async ensureLocalDemoDispatchScenario(
+    driverId: string,
+    driverNear?: { latitude: number; longitude: number }
+  ): Promise<void> {
     if (this.getOpenRides().length > 0) return;
     const scenarioId = localScenarioRideIdForDriver(driverId);
     const existing = this.rides.get(scenarioId);
@@ -282,7 +284,7 @@ export class LocalDemoRideRepository implements RideRepository {
       if (existing.status === "requested" && !existing.driverId) return;
       this.rides.delete(scenarioId);
     }
-    const ride = buildLocalDemoDispatchRide(driverId);
+    const ride = buildLocalDemoDispatchRide(driverId, driverNear);
     const withId = { ...ride, id: scenarioId };
     this.rides.set(withId.id, withId);
     this.emit(withId.id);

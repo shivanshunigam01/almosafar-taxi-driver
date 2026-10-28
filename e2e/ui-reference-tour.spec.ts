@@ -83,8 +83,8 @@ test.describe("Driver — 9-screen journey (capture)", () => {
     await page.getByRole("button", { name: /continue to dashboard/i }).click();
     await page.waitForURL("**/dashboard**", { timeout: 60_000 });
     await page.screenshot({ path: shot("d02-dashboard.png"), fullPage: true });
-    const goOnline = page.getByRole("button", { name: /^Go online$/i });
-    if (await goOnline.isVisible()) await goOnline.click();
+    await page.getByRole("checkbox").check();
+    await page.getByRole("button", { name: /^Start service$/i }).click();
     await expect(page.getByRole("button", { name: "Accept" })).toBeVisible({ timeout: 45_000 });
     await page.screenshot({ path: shot("d03-incoming.png"), fullPage: true });
     await page.goto("http://localhost:3002/earnings");

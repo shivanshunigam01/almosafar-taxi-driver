@@ -193,9 +193,12 @@ export class LocalStorageRideRepository implements RideRepository {
     return this.inner.listRidesForDriver(driverId);
   }
 
-  ensureLocalDemoDispatchScenario?(driverId: string): Promise<void> {
+  ensureLocalDemoDispatchScenario?(
+    driverId: string,
+    driverNear?: { latitude: number; longitude: number }
+  ): Promise<void> {
     return this.wrap(() =>
-      this.inner.ensureLocalDemoDispatchScenario!(driverId)
+      this.inner.ensureLocalDemoDispatchScenario!(driverId, driverNear)
     );
   }
 
