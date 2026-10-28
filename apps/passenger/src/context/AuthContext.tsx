@@ -9,6 +9,7 @@ type Session = {
   passengerId: string;
   name: string;
   email: string;
+  phone: string;
   onboardingDone: boolean;
 };
 
@@ -29,7 +30,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const raw = localStorage.getItem(KEY);
-    if (raw) setSession(JSON.parse(raw));
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw) as Session;
+        setSession({
+          ...parsed,
+          phone: parsed.phone ?? "+964 770 000 0000",
+        });
+      } catch {
+        /* ignore */
+      }
+    }
     setHydrated(true);
   }, []);
 
@@ -50,15 +61,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       passengerId: p.id,
       name: p.displayName,
       email: p.email ?? email.trim(),
+      phone: p.phoneE164 ?? "+964 770 000 0000",
       onboardingDone: true,
     });
   };
 
-  const register = async (name: string, email: string, _phone: string) => {
+  const register = async (name: string, email: string, phone: string) => {
     persist({
       passengerId: `local_passenger_${Date.now()}`,
       name,
       email,
+      phone: phone.trim() || "+964 770 000 0000",
       onboardingDone: true,
     });
   };

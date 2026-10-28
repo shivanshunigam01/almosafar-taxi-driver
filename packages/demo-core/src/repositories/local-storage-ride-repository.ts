@@ -198,4 +198,8 @@ export class LocalStorageRideRepository implements RideRepository {
       this.inner.ensureLocalDemoDispatchScenario!(driverId)
     );
   }
+
+  ensurePassengerDemoHistory?(passengerId: string): Promise<void> {
+    return this.wrap(() => this.inner.ensurePassengerDemoHistory!(passengerId));
+  }
 }

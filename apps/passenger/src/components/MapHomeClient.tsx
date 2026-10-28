@@ -5,7 +5,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   Bell,
+  Briefcase,
   ChevronUp,
+  Home,
   LocateFixed,
   MapPin,
   User,
@@ -33,7 +35,14 @@ function addressFromPlace(p: MapPlace) {
 }
 
 function MapHomeInner() {
-  const { booking, setPickup, setDropoff, setRoute, addRecentDestination } = useBooking();
+  const {
+    booking,
+    setPickup,
+    setDropoff,
+    setRoute,
+    addRecentDestination,
+    setSavedPlace,
+  } = useBooking();
   const { geolocation, routing } = useMapServices();
   const { t, locale, setLocale } = useLocale();
   const { session } = useAuth();
@@ -229,7 +238,7 @@ function MapHomeInner() {
 
           <button
             type="button"
-            className="mb-3 flex w-full items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm"
+            className="mb-2 flex w-full items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm"
             onClick={() => setSheet("pickup")}
           >
             <LocateFixed className="h-4 w-4 text-slate-500" />
@@ -237,6 +246,20 @@ function MapHomeInner() {
               {booking.pickup?.label ?? t("Pickup", "الانطلاق")}
             </span>
           </button>
+          <div className="mb-3 flex gap-2 text-xs">
+            <Link
+              href="/booking/pickup"
+              className="flex-1 rounded-lg border border-slate-200 py-2 text-center font-medium text-brand"
+            >
+              {t("Pick on list", "اختر من القائمة")}
+            </Link>
+            <Link
+              href="/booking/destination"
+              className="flex-1 rounded-lg border border-slate-200 py-2 text-center font-medium text-brand"
+            >
+              {t("Destination list", "قائمة الوجهات")}
+            </Link>
+          </div>
 
           {(sheet === "pickup" || sheet === "dropoff") && (
             <div className="mb-4">
@@ -256,23 +279,60 @@ function MapHomeInner() {
                 }}
                 autoFocus
               />
+              <div className="mt-3 flex gap-2">
+                <button
+                  type="button"
+                  className="flex-1 rounded-lg bg-slate-100 py-2 text-xs font-semibold text-slate-700"
+                  onClick={() => {
+                    const target =
+                      sheet === "pickup" ? booking.pickup : booking.dropoff;
+                    if (!target) return;
+                    setSavedPlace("home", target);
+                  }}
+                >
+                  {t("Save as Home", "حفظ كالمنزل")}
+                </button>
+                <button
+                  type="button"
+                  className="flex-1 rounded-lg bg-slate-100 py-2 text-xs font-semibold text-slate-700"
+                  onClick={() => {
+                    const target =
+                      sheet === "pickup" ? booking.pickup : booking.dropoff;
+                    if (!target) return;
+                    setSavedPlace("work", target);
+                  }}
+                >
+                  {t("Save as Work", "حفظ كالعمل")}
+                </button>
+              </div>
             </div>
           )}
 
           {(sheet === "expanded" || sheet === "collapsed") && booking.recentDestinations.length > 0 && (
             <div className="space-y-3">
-              <div className="flex gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 {(["home", "work"] as const).map((kind) => {
                   const place = booking.saved[kind];
                   if (!place) return null;
+                  const Icon = kind === "home" ? Home : Briefcase;
                   return (
                     <button
                       key={kind}
                       type="button"
-                      className="flex-1 rounded-xl border border-slate-200 py-2 text-sm capitalize"
-                      onClick={() => onSelectDropoff({ label: place.label, geo: place.geo, source: "saved" })}
+                      className="flex flex-col items-start gap-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-left active:border-brand"
+                      onClick={() =>
+                        onSelectDropoff({
+                          label: place.label,
+                          geo: place.geo,
+                          source: "saved",
+                        })
+                      }
                     >
-                      {t(kind, kind === "home" ? "المنزل" : "العمل")}
+                      <span className="flex items-center gap-1 text-sm font-semibold capitalize text-slate-900">
+                        <Icon className="h-4 w-4 text-brand" />
+                        {t(kind, kind === "home" ? "المنزل" : "العمل")}
+                      </span>
+                      <span className="line-clamp-2 text-xs text-slate-500">{place.label}</span>
                     </button>
                   );
                 })}

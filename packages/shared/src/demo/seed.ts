@@ -293,13 +293,107 @@ const dropoff = {
   geo: { latitude: 33.2625, longitude: 44.2346 },
 };
 
+function demoFareStub(totalMinor: number, distanceKm: number, durationMinutes: number) {
+  return {
+    baseFare: { currency: "IQD" as const, amountMinor: 150000 },
+    distanceComponent: { currency: "IQD" as const, amountMinor: 180000 },
+    timeComponent: { currency: "IQD" as const, amountMinor: 60000 },
+    bookingFee: { currency: "IQD" as const, amountMinor: 0 },
+    total: { currency: "IQD" as const, amountMinor: totalMinor },
+    distanceKm,
+    durationMinutes,
+    fareConfigId: createDemoId("fare_config_economy"),
+    computedAt: T0,
+  };
+}
+
+const saraId = createDemoId("passenger_sara");
+const khalidId = createDemoId("driver_khalid");
+const laylaId = createDemoId("driver_layla");
+const camryId = createDemoId("vehicle_camry_khalid");
+
 /** Sample rides — for demo sync UIs only. */
 export const demoRides: Ride[] = [
   {
+    id: createDemoId("ride_completed_sara_1"),
+    passengerId: saraId,
+    driverId: khalidId,
+    vehicleId: camryId,
+    zoneId: demoZone.id,
+    category: "economy",
+    status: "completed",
+    pickup: {
+      label: "Demo — Al-Mansour, Baghdad",
+      geo: { latitude: 33.312, longitude: 44.329 },
+    },
+    dropoff: {
+      label: "Demo — Al-Karrada, Baghdad",
+      geo: { latitude: 33.2958, longitude: 44.3859 },
+    },
+    statusHistory: [
+      {
+        status: "requested",
+        at: "2026-01-12T14:00:00+03:00",
+        actorId: saraId,
+        actorRole: "passenger",
+      },
+      {
+        status: "completed",
+        at: "2026-01-12T14:45:00+03:00",
+        actorId: khalidId,
+        actorRole: "driver",
+      },
+    ],
+    paymentMethodId: createDemoId("pm_cash_sara"),
+    requestedAt: "2026-01-12T14:00:00+03:00",
+    updatedAt: "2026-01-12T14:45:00+03:00",
+    completedAt: "2026-01-12T14:45:00+03:00",
+    fareEstimate: demoFareStub(390000, 8.2, 22),
+    fareFinal: demoFareStub(390000, 8.2, 22),
+    isDemoData: true,
+  },
+  {
+    id: createDemoId("ride_completed_sara_2"),
+    passengerId: saraId,
+    driverId: laylaId,
+    zoneId: demoZone.id,
+    category: "comfort",
+    status: "completed",
+    pickup: {
+      label: "Demo — Jadriyah, Baghdad",
+      geo: { latitude: 33.277, longitude: 44.407 },
+    },
+    dropoff: {
+      label: "Demo — Al-Mutanabbi Street, Baghdad",
+      geo: { latitude: 33.3406, longitude: 44.3925 },
+    },
+    statusHistory: [
+      {
+        status: "requested",
+        at: "2026-01-10T09:30:00+03:00",
+        actorId: saraId,
+        actorRole: "passenger",
+      },
+      {
+        status: "completed",
+        at: "2026-01-10T10:05:00+03:00",
+        actorId: laylaId,
+        actorRole: "driver",
+      },
+    ],
+    paymentMethodId: createDemoId("pm_cash_sara"),
+    requestedAt: "2026-01-10T09:30:00+03:00",
+    updatedAt: "2026-01-10T10:05:00+03:00",
+    completedAt: "2026-01-10T10:05:00+03:00",
+    fareEstimate: demoFareStub(500000, 11.4, 28),
+    fareFinal: demoFareStub(500000, 11.4, 28),
+    isDemoData: true,
+  },
+  {
     id: createDemoId("ride_active"),
-    passengerId: createDemoId("passenger_sara"),
-    driverId: createDemoId("driver_khalid"),
-    vehicleId: createDemoId("vehicle_camry_khalid"),
+    passengerId: saraId,
+    driverId: khalidId,
+    vehicleId: camryId,
     zoneId: demoZone.id,
     category: "comfort",
     status: "driver_arriving",

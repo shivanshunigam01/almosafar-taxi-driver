@@ -64,4 +64,7 @@ export interface RideRepository {
 
   /** Local demo: inject a deterministic open request when going online. */
   ensureLocalDemoDispatchScenario?(driverId: string): Promise<void>;
+
+  /** Local demo: merge seed trip history for passenger if missing. */
+  ensurePassengerDemoHistory?(passengerId: string): Promise<void>;
 }

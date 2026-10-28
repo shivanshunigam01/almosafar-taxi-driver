@@ -1,28 +1,93 @@
 "use client";
 
-import { DEMO_LOCATIONS } from "@almosafar/shared";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Home, Briefcase } from "lucide-react";
+import { DEMO_LOCATIONS } from "@almosafar/shared";
+import { LocationSearch } from "@almosafar/maps/react";
+import type { MapPlace } from "@almosafar/maps";
+import { MapProvider } from "@almosafar/maps/react";
 import { useBooking } from "@/context/BookingContext";
+import { useLocale } from "@/context/LocaleContext";
 
 export default function PickupPage() {
-  const { setPickup } = useBooking();
+  const { booking, setPickup, setSavedPlace } = useBooking();
   const router = useRouter();
+  const { t } = useLocale();
+
+  const apply = (place: MapPlace) => {
+    setPickup({ label: place.label, geo: place.geo });
+    router.push("/home");
+  };
+
   return (
-    <div className="space-y-3 px-4 py-6">
-      <h1 className="text-lg font-bold">Pickup location</h1>
-      {DEMO_LOCATIONS.map((loc) => (
-        <button
-          key={loc.label}
-          type="button"
-          className="block w-full rounded-xl border bg-white p-4 text-start"
-          onClick={() => {
-            setPickup(loc);
-            router.push("/home");
-          }}
-        >
-          {loc.label}
-        </button>
-      ))}
-    </div>
+    <MapProvider>
+      <div className="space-y-4 bg-slate-50 px-4 py-6 pb-24">
+        <Link href="/home" className="text-sm font-medium text-brand">
+          ← {t("Map", "الخريطة")}
+        </Link>
+        <h1 className="text-xl font-bold text-slate-900">{t("Choose pickup", "اختر نقطة الانطلاق")}</h1>
+        <LocationSearch
+          placeholder={t("Search address or landmark", "ابحث عن عنوان أو معلم")}
+          onSelect={apply}
+          autoFocus
+        />
+        <div className="flex gap-2">
+          {(["home", "work"] as const).map((kind) => {
+            const place = booking.saved[kind];
+            if (!place) return null;
+            const Icon = kind === "home" ? Home : Briefcase;
+            return (
+              <button
+                key={kind}
+                type="button"
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white py-3 text-sm font-medium"
+                onClick={() => apply({ label: place.label, geo: place.geo, source: "saved" })}
+              >
+                <Icon className="h-4 w-4 text-brand" />
+                {t(kind, kind === "home" ? "المنزل" : "العمل")}
+              </button>
+            );
+          })}
+        </div>
+        <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+          {t("Suggested", "مقترح")}
+        </p>
+        {DEMO_LOCATIONS.map((loc) => (
+          <button
+            key={loc.label}
+            type="button"
+            className="block w-full rounded-xl border border-slate-200 bg-white p-4 text-left text-sm hover:border-brand"
+            onClick={() => {
+              setPickup(loc);
+              router.push("/home");
+            }}
+          >
+            {loc.label}
+          </button>
+        ))}
+        <p className="text-xs text-slate-500">
+          {t("Tip: after selecting on the map home screen, use Save as Home or Work.", "نصيحة: بعد الاختيار من الخريطة استخدم حفظ كالمنزل أو العمل.")}
+        </p>
+        {booking.pickup && (
+          <div className="flex gap-2">
+            <button
+              type="button"
+              className="flex-1 rounded-xl bg-slate-200 py-2 text-xs font-semibold"
+              onClick={() => setSavedPlace("home", booking.pickup!)}
+            >
+              {t("Set current as Home", "تعيين الحالي كالمنزل")}
+            </button>
+            <button
+              type="button"
+              className="flex-1 rounded-xl bg-slate-200 py-2 text-xs font-semibold"
+              onClick={() => setSavedPlace("work", booking.pickup!)}
+            >
+              {t("Set current as Work", "تعيين الحالي كالعمل")}
+            </button>
+          </div>
+        )}
+      </div>
+    </MapProvider>
   );
 }

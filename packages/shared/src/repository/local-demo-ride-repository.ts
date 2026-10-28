@@ -381,4 +381,15 @@ export class LocalDemoRideRepository implements RideRepository {
       .filter((r) => r.driverId === driverId)
       .sort((a, b) => b.requestedAt.localeCompare(a.requestedAt));
   }
+
+  async ensurePassengerDemoHistory(passengerId: string): Promise<void> {
+    const seed = getDemoSeedBundle();
+    for (const r of seed.rides) {
+      if (r.passengerId !== passengerId) continue;
+      if (!this.rides.has(r.id)) {
+        this.rides.set(r.id, parseRide(r));
+        this.emit(r.id);
+      }
+    }
+  }
 }
